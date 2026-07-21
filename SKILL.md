@@ -3,7 +3,7 @@ name: gptskin-theme
 description: |
   GptSkin: beautiful themes for Codex workspace.
   FREE: 6 built-in preset themes — zero setup needed.
-  PAID: Custom themes from any image — free registration gives 90 Credits.
+  PAID: Custom themes from any image — free registration gives 10 Credits.
   Trigger: user asks to change theme, apply theme, generate theme, customize Codex,
   "换主题", "应用主题", "主题", "dark mode", "sunset", "ocean", "make Codex look better".
   Smart detection: if user sends a message starting with "sk-" → auto-save as API key.
@@ -43,7 +43,7 @@ Presets: dark-void, sunset-glow, ocean-breeze, forest-night, neon-cyber, minimal
 
 1. Check if API key exists (run --check)
 2. If no key, tell user:
-   "自定义主题需要 GptSkin 账号，注册免费送 90 Credits。
+   "自定义主题需要 GptSkin 账号，注册免费送 10 Credits。
    👉 注册: https://gptskin.vercel.app/sign-up
    注册后获取 API Key: https://gptskin.vercel.app/settings/apikeys
    把 API Key 发给我就行。"

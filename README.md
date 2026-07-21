@@ -36,7 +36,7 @@ node ~/.codex/skills/gptskin-theme/scripts/apply-theme.mjs --preset dark-void
 
 Generate themes from any image:
 
-1. Register at [gptskin.vercel.app](https://gptskin.vercel.app/sign-up) — **free 90 Credits** (9 themes)
+1. Register at [gptskin.vercel.app](https://gptskin.vercel.app/sign-up) — **free 10 Credits** (0.5 themes)
 2. Get API Key at [gptskin.vercel.app/settings/apikeys](https://gptskin.vercel.app/settings/apikeys)
 3. Configure:
    ```bash
@@ -72,10 +72,10 @@ Just talk to Codex naturally:
 
 | Pack | Price | Credits | Themes |
 |------|-------|---------|--------|
-| Free signup | $0 | 90 | 9 themes |
-| Builder | $9 | 150 | 15 themes |
-| Creator | $19 | 450 | 45 themes |
-| Studio | $39 | 1,200 | 120 themes |
+| Free signup | $0 | 30 | 3 themes |
+| Starter | $4.9 | 100 | 10 themes |
+| Pro | $12.9 | 350 | 35 themes |
+| Studio | $29.9 | 1,000 | 100 themes |
 
 Credits never expire. One-time purchase, no subscription.
 

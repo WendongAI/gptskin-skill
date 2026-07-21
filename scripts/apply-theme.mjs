@@ -232,7 +232,7 @@ else if (args[0] === "--image" && args[1]) {
   const { data: cd } = await api(config, "/api/user/credits");
   if (cd.message === "authentication required") { console.log("❌ Invalid key. Get new key: " + config.serverUrl + "/settings/apikeys"); process.exit(1); }
   if ((cd.credits ?? 0) < 10) {
-    console.log(`❌ Credits: ${cd.credits ?? 0} (need 10).`);
+    console.log(`❌ Credits: ${cd.credits ?? 0} (need 20).`);
     console.log(`   Top up: ${config.serverUrl}/settings/credits`);
     process.exit(1);
   }
