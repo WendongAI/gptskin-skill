@@ -1,0 +1,7 @@
+{
+  "id": "minimal-light",
+  "name": "Minimal Light",
+  "description": "Clean minimal light theme",
+  "colors": ["#3b82f6", "#93c5fd", "#f8fafc"],
+  "free": true
+}

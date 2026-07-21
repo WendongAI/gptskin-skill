@@ -1,0 +1,7 @@
+{
+  "id": "dark-void",
+  "name": "Dark Void",
+  "description": "Deep dark theme with purple accents",
+  "colors": ["#a78bfa", "#7c3aed", "#0f0a1a"],
+  "free": true
+}

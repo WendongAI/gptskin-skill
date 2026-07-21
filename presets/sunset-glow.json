@@ -1,0 +1,7 @@
+{
+  "id": "sunset-glow",
+  "name": "Sunset Glow",
+  "description": "Warm sunset colors with orange and pink",
+  "colors": ["#f97316", "#ec4899", "#1c0a00"],
+  "free": true
+}
