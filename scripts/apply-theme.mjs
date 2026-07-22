@@ -145,6 +145,8 @@ function generateCSS(colors) {
   --color-token-text-primary: ${text} !important;
   --color-token-text-secondary: ${textMuted} !important;
   --color-token-text-tertiary: ${textFaint} !important;
+  --color-token-foreground: ${text} !important;
+  --color-token-description-foreground: ${textMuted} !important;
   --color-token-border: ${border} !important;
   --color-token-border-default: ${border} !important;
   --color-token-border-light: ${border} !important;
@@ -184,12 +186,29 @@ input, textarea, select, [data-radix-popper-content], .modal, dialog {
 `;
 }
 
-async function injectTheme(cdp, css, bgBase64, bgMime = "image/webp", bgFilter = "brightness(1.25) saturate(1.1)", themeName = null) {
+// Light themes need extra help: Codex is a dark-only app, so lots of text is
+// hard-coded white (or uses tokens we can't reach). lightFixFor() returns the
+// dark text colors to flip to, or null for dark themes.
+function lightFixFor(colors) {
+  if (!colors || colors.length < 3) return null;
+  const h = colors[2].replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+  if ((r * 299 + g * 587 + b * 114) / 1000 <= 128) return null;
+  const shift = (pct) => {
+    const f = (v) => Math.min(255, Math.max(0, v + Math.round(255 * pct)));
+    return `rgb(${f(r)},${f(g)},${f(b)})`;
+  };
+  return { text: shift(-0.86), muted: shift(-0.55) };
+}
+
+async function injectTheme(cdp, css, bgBase64, bgMime = "image/webp", bgFilter = "brightness(1.25) saturate(1.1)", themeName = null, lightFix = null) {
   const esc = css.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$/g, "\\$");
   // Wrap in an IIFE: top-level `const` in Runtime.evaluate leaks into the
   // page's global scope, so a second injection in the same session would
   // throw "Identifier already declared" and silently fail.
   let js = `(()=>{
+    if(window.__gptskinLightFix){window.__gptskinLightFix.disconnect();window.__gptskinLightFix=null;}
+    document.querySelectorAll('[data-gptskin-fix]').forEach(e=>{e.style.removeProperty('color');e.removeAttribute('data-gptskin-fix');});
     document.querySelectorAll('[id^="gptskin-"]').forEach(e=>e.remove());
     document.body.style.removeProperty('background-color');
     const s=document.createElement('style');s.id='gptskin-theme';
@@ -219,6 +238,30 @@ async function injectTheme(cdp, css, bgBase64, bgMime = "image/webp", bgFilter =
       w.textContent='${label.replace(/'/g, "\\'")}';
       w.style.cssText='position:fixed;right:10px;bottom:8px;z-index:2147483647;padding:3px 10px;border-radius:999px;background:rgba(0,0,0,.32);color:rgba(255,255,255,.5);font:12px/1.4 -apple-system,Helvetica,sans-serif;letter-spacing:.02em;pointer-events:none;backdrop-filter:blur(4px)';
       document.body.appendChild(w);`;
+  }
+  // Light-theme rescue: Codex is a dark-only app with lots of hard-coded
+  // white text. Flip near-white text to dark — but only when it sits on a
+  // light backdrop, so white-on-accent buttons and dark panes stay white.
+  // Fixed elements are tagged and cleaned up on the next inject/remove.
+  if (lightFix) {
+    js += `(function(){
+      var DARK='${lightFix.text}',MUTED='${lightFix.muted}';
+      function parseC(c){var m=c&&c.match(/rgba?\\((\\d+)[,\\s]+(\\d+)[,\\s]+(\\d+)(?:[,\\s/]+([\\d.]+))?/);return m?{r:+m[1],g:+m[2],b:+m[3],a:m[4]===undefined?1:+m[4]}:null;}
+      function bgDark(el){var cur=el;while(cur&&cur!==document.documentElement){var p=parseC(getComputedStyle(cur).backgroundColor);if(p&&p.a>0.05)return 0.299*p.r+0.587*p.g+0.114*p.b<150;cur=cur.parentElement;}return false;}
+      function fix(root){var list=[];if(root.nodeType===1)list.push(root);if(root.querySelectorAll){var all=root.querySelectorAll('*');for(var i=0;i<all.length;i++)list.push(all[i]);}
+        var n=0;
+        for(var i=0;i<list.length;i++){var el=list[i];if(n>4000)break;
+          if(el.id==='gptskin-badge')continue;
+          var p=parseC(getComputedStyle(el).color);
+          if(!p||p.r<235||p.g<235||p.b<235)continue;
+          if(bgDark(el))continue;
+          el.style.setProperty('color',p.a>=0.75?DARK:MUTED,'important');
+          el.setAttribute('data-gptskin-fix','1');n++;}}
+      fix(document.body);
+      var obs=new MutationObserver(function(muts){obs.__m=(obs.__m||[]).concat(muts);clearTimeout(obs.__t);obs.__t=setTimeout(function(){var ms=obs.__m;obs.__m=[];for(var i=0;i<ms.length;i++){var an=ms[i].addedNodes;for(var j=0;j<an.length;j++)if(an[j].nodeType===1)fix(an[j]);}},300);});
+      obs.observe(document.body,{childList:true,subtree:true});
+      window.__gptskinLightFix=obs;
+    })();`;
   }
   js += `})()`;
   return cdp.evaluate(js + `,'ok'`);
@@ -271,7 +314,7 @@ else if (args[0] === "--preset" && args[1]) {
   }
   if (!(await ensureCdp())) process.exit(1);
   const cdp = await cdpConnect();
-  await injectTheme(cdp, css, bgBase64, bgMime, preset.bgFilter || undefined, preset.name);
+  await injectTheme(cdp, css, bgBase64, bgMime, preset.bgFilter || undefined, preset.name, lightFixFor(preset.colors));
   cdp.close();
   console.log(`✅ Applied: ${preset.name} | Colors: ${preset.colors.join(", ")}${bgBase64 ? " + background" : ""}`);
   // Best-effort usage tracking (no auth required for presets).
@@ -305,7 +348,7 @@ else if (args[0] === "--try" && args[1]) {
   const css = generateCSS(colors);
   if (!(await ensureCdp())) process.exit(1);
   const cdp = await cdpConnect();
-  await injectTheme(cdp, css, bgBase64, bgMime, undefined, null);
+  await injectTheme(cdp, css, bgBase64, bgMime, undefined, null, lightFixFor(colors));
   cdp.close();
   console.log(`✅ Applied local preview | Colors: ${colors.join(", ")}${bgBase64 ? " + background image" : ""}`);
 }
@@ -342,7 +385,7 @@ else if (args[0] === "--check") {
 else if (args[0] === "--remove") {
   if (!(await ensureCdp())) process.exit(1);
   const cdp = await cdpConnect();
-  await cdp.evaluate(`document.querySelectorAll('[id^="gptskin-"]').forEach(e=>e.remove());document.body.style.removeProperty('background-color');'ok'`);
+  await cdp.evaluate(`if(window.__gptskinLightFix){window.__gptskinLightFix.disconnect();window.__gptskinLightFix=null;}document.querySelectorAll('[data-gptskin-fix]').forEach(e=>{e.style.removeProperty('color');e.removeAttribute('data-gptskin-fix');});document.querySelectorAll('[id^="gptskin-"]').forEach(e=>e.remove());document.body.style.removeProperty('background-color');'ok'`);
   cdp.close();
   console.log("✅ Theme removed");
 }
@@ -381,7 +424,7 @@ else if (args[0] === "--apply" && args[1]) {
   }
   if (!(await ensureCdp())) process.exit(1);
   const cdp = await cdpConnect();
-  await injectTheme(cdp, data.css, backgroundBase64, data.backgroundMime || undefined, undefined, data.name);
+  await injectTheme(cdp, data.css, backgroundBase64, data.backgroundMime || undefined, undefined, data.name, lightFixFor(data.colors));
   cdp.close();
   console.log(`✅ Applied: ${data.name}`);
 }
@@ -420,7 +463,7 @@ else if (args[0] === "--image" && args[1]) {
   console.log("Applying to Codex...");
   const backgroundBase64 = theme.backgroundPath ? readFileSync(theme.backgroundPath).toString("base64") : null;
   const cdp = await cdpConnect();
-  await injectTheme(cdp, theme.css, backgroundBase64, theme.backgroundMime || undefined, undefined, theme.name);
+  await injectTheme(cdp, theme.css, backgroundBase64, theme.backgroundMime || undefined, undefined, theme.name, lightFixFor(theme.colors));
   cdp.close();
   console.log("✅ Theme applied to Codex!");
 }

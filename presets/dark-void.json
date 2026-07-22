@@ -1,7 +1,13 @@
 {
   "id": "dark-void",
   "name": "Dark Void",
-  "description": "Deep dark theme with purple accents",
-  "colors": ["#a78bfa", "#7c3aed", "#0f0a1a"],
+  "description": "Milky way over the void \u2014 violet accents on deep space",
+  "colors": [
+    "#a78bfa",
+    "#7c3aed",
+    "#0f0a1a"
+  ],
+  "background": "bg/dark-void.webp",
+  "credit": "Vittorio Staffolani / Pexels",
   "free": true
 }

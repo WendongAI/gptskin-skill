@@ -1,7 +1,14 @@
 {
   "id": "minimal-light",
   "name": "Minimal Light",
-  "description": "Clean minimal light theme",
-  "colors": ["#3b82f6", "#93c5fd", "#f8fafc"],
+  "description": "Alpine snow under clear sky \u2014 airy blue on white",
+  "colors": [
+    "#3b82f6",
+    "#93c5fd",
+    "#f8fafc"
+  ],
+  "background": "bg/minimal-light.webp",
+  "bgFilter": "brightness(1.02) saturate(0.95)",
+  "credit": "Jose Gill / Pexels",
   "free": true
 }

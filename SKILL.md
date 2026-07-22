@@ -82,7 +82,7 @@ node scripts/apply-theme.mjs --presets
 node scripts/apply-theme.mjs --preset aurora-borealis
 ```
 
-Available presets: `aurora-borealis`, `snow-peak`, `city-lights`, `dark-void`, `sunset-glow`, and `minimal-light`.
+Available presets: `aurora-borealis`, `snow-peak`, `city-lights`, `dark-void`, `sunset-glow`, and `minimal-light` — all with scenic backgrounds.
 
 ## Other commands
 

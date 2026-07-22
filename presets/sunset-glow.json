@@ -1,7 +1,13 @@
 {
   "id": "sunset-glow",
   "name": "Sunset Glow",
-  "description": "Warm sunset colors with orange and pink",
-  "colors": ["#f97316", "#ec4899", "#1c0a00"],
+  "description": "Golden hour over the sea \u2014 warm ember on twilight",
+  "colors": [
+    "#f97316",
+    "#ec4899",
+    "#1c0a00"
+  ],
+  "background": "bg/sunset-glow.webp",
+  "credit": "Anderson Wei / Pexels",
   "free": true
 }
