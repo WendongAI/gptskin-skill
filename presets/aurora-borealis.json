@@ -1,0 +1,8 @@
+{
+  "id": "aurora-borealis",
+  "name": "Aurora Borealis",
+  "description": "Northern lights over arctic snow — aurora green on polar night",
+  "colors": ["#6ee7b7", "#1d4a3c", "#07120e"],
+  "background": "bg/aurora-borealis.webp",
+  "credit": "Stein Egil Liland / Pexels"
+}

@@ -1,0 +1,8 @@
+{
+  "id": "city-lights",
+  "name": "City Lights",
+  "description": "Night skyline from above — warm amber on midnight blue",
+  "colors": ["#f5a623", "#2a3a55", "#0b0e17"],
+  "background": "bg/city-lights.webp",
+  "credit": "Zeeshaan Shabbir / Pexels"
+}

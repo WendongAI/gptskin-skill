@@ -1,0 +1,4 @@
+interface:
+  display_name: "GptSkin for Codex"
+  short_description: "Create and apply custom Codex desktop themes"
+  default_prompt: "Use $gptskin-theme to turn my visual idea or image into a Codex desktop theme and apply it locally."

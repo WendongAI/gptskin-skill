@@ -1,12 +1,14 @@
 # 🎨 GptSkin — Theme Manager for Codex
 
-Beautiful themes for your Codex desktop workspace. Free presets + custom AI-generated themes.
+Beautiful themes for your Codex desktop workspace. Free presets + custom image-backed themes.
 
 ## Quick Install
 
 ```bash
 # Clone into Codex skills directory
 git clone https://github.com/WendongAI/gptskin-skill.git ~/.codex/skills/gptskin-theme
+cd ~/.codex/skills/gptskin-theme
+npm install
 ```
 
 Or manually copy the `gptskin-theme` folder to `~/.codex/skills/`.
@@ -27,18 +29,18 @@ node ~/.codex/skills/gptskin-theme/scripts/apply-theme.mjs --preset dark-void
 |--------|-------|
 | `dark-void` | Deep dark with purple accents |
 | `sunset-glow` | Warm orange and pink |
-| `ocean-breeze` | Cool blues and teals |
-| `forest-night` | Natural green on dark |
-| `neon-cyber` | Cyberpunk neon pink and cyan |
+| `aurora-borealis` | Aurora landscape with green and violet |
+| `snow-peak` | Calm alpine light |
+| `city-lights` | Neon city at night |
 | `minimal-light` | Clean minimal light |
 
-## Custom Themes (Free to Start)
+## Custom Themes
 
-Generate themes from any image:
+Each custom theme costs **20 Credits**. Generate one from your image or describe a visual direction in one sentence and let Codex create the source image first:
 
-1. Register at [gptskin.vercel.app](https://gptskin.vercel.app/sign-up) — **free 10 Credits** (0.5 themes)
-2. Get API Key at [gptskin.vercel.app/settings/apikeys](https://gptskin.vercel.app/settings/apikeys)
-3. Configure:
+1. Register at [gptskin.best](https://gptskin.best/sign-up) — the 10-Credit signup bonus counts toward the first theme
+2. Get API Key at [gptskin.best/settings/apikeys](https://gptskin.best/settings/apikeys)
+3. Configure it in your own terminal so the key is not pasted into chat:
    ```bash
    node ~/.codex/skills/gptskin-theme/scripts/apply-theme.mjs --key sk-your-key
    ```
@@ -54,6 +56,9 @@ Just talk to Codex naturally:
 - "换个暗黑主题" → applies `dark-void`
 - "I want sunset colors" → applies `sunset-glow`
 - "用 ~/Desktop/wallpaper.jpg 做个主题" → generates custom theme
+- "Make Codex feel like a quiet neon Tokyo night" → Codex generates a local image, then runs the same paid `--image` flow
+
+For custom prose, image generation happens in Codex. GptSkin's website handles the account, Credits, compilation, and durable artifacts; this Skill applies the resulting theme locally to the Codex desktop app.
 
 ## Commands
 
@@ -68,22 +73,29 @@ Just talk to Codex naturally:
 --remove               Remove current theme
 ```
 
+`--list` prints the complete theme ID. Copy that exact ID into `--apply`; locally saved themes can be reapplied without downloading them again.
+
 ## Pricing
 
-| Pack | Price | Credits | Themes |
-|------|-------|---------|--------|
-| Free signup | $0 | 30 | 3 themes |
-| Starter | $4.9 | 100 | 10 themes |
-| Pro | $12.9 | 350 | 35 themes |
-| Studio | $29.9 | 1,000 | 100 themes |
+| Pack | Price | Credits |
+|------|-------|---------|
+| Signup bonus | $0 | 10 (valid 30 days) |
+| Starter | $9.9 | 100 |
+| Pro | $19.9 | 500 |
+| Studio | $49 | 1,500 |
 
-Credits never expire. One-time purchase, no subscription.
+Each custom theme costs 20 Credits. Paid credits never expire. One-time purchase, no subscription.
 
 ## How It Works
 
-1. Preset themes: CSS generated locally, injected via Chrome DevTools Protocol
-2. Custom themes: Image uploaded → AI extracts colors → CSS generated → injected into Codex
-3. Codex must be running with `--remote-debugging-port=9223` (script handles this automatically)
+1. Preset themes: CSS generated locally and injected through Chrome DevTools Protocol (CDP)
+2. Custom themes: local image → authenticated `uploadKey` → one stable Idempotency-Key → 20-Credit compile → verified CSS/background SHA → local saved copy → local application
+3. The website never applies a theme to your computer
+4. The script supports macOS and Windows and launches Codex with a loopback CDP port in the `19100` range
+
+If a network response is lost, rerun the same image path and theme name. The persisted request identity lets the server return the original result without a second charge. The normal apply path does not download the archival ZIP.
+
+If app discovery fails, set `CODEX_APP_PATH` to the Codex `.app` path on macOS or to `Codex.exe` on Windows. Because local CDP can be reached by other processes on the same computer while enabled, only run the Skill on a trusted machine. The injector accepts only one uniquely identified Codex/ChatGPT/OpenAI page with a loopback WebSocket; ambiguous or unrelated Electron pages are rejected.
 
 ## License
 

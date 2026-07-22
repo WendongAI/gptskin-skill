@@ -1,6 +1,6 @@
 #!/bin/bash
 # Restart Codex with remote debugging port for CSS injection
-CDP_PORT=9223
+CDP_PORT="${GPTSKIN_CDP_PORT:-19123}"
 
 # Check if already running with CDP
 if curl -s --connect-timeout 1 "http://127.0.0.1:$CDP_PORT/json/version" >/dev/null 2>&1; then

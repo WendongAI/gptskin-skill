@@ -1,0 +1,9 @@
+{
+  "id": "snow-peak",
+  "name": "Snow Peak",
+  "description": "Moonlit snow mountains — ice blue accents on deep slate",
+  "colors": ["#9ec8f0", "#3a5a7c", "#141c28"],
+  "background": "bg/snow-peak.webp",
+  "bgFilter": "brightness(0.95) saturate(1.05)",
+  "credit": "Marek Piwnicki / Pexels"
+}
