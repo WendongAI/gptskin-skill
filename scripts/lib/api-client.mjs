@@ -3,6 +3,7 @@ import { basename, extname } from "node:path";
 
 export const DEFAULT_SERVER_URL = "https://gptskin.best";
 export const CUSTOM_THEME_CREDITS = 20;
+export const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 
 const IMAGE_TYPES = [
   {
@@ -72,6 +73,9 @@ export function createApiClient({
       const bytes = readFileSync(imagePath);
       const imageType = detectImageType(bytes);
       if (!imageType) throw new Error("Only PNG, JPEG, or WebP images are supported");
+      if (bytes.length > MAX_IMAGE_BYTES) {
+        throw new Error("Image exceeds the 4 MiB upload limit; resize or compress it first");
+      }
 
       const originalExtension = extname(imagePath);
       const fileName = `${basename(imagePath, originalExtension)}${imageType.extension}`;

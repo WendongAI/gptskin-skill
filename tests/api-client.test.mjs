@@ -76,6 +76,27 @@ test("unsupported image bytes are rejected before upload", async (t) => {
   assert.equal(called, false);
 });
 
+test("images over the Vercel-safe 4 MiB limit are rejected before upload", async (t) => {
+  const root = mkdtempSync(join(tmpdir(), "gptskin-api-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const imagePath = join(root, "oversized.png");
+  const bytes = Buffer.alloc(4 * 1024 * 1024 + 1);
+  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(bytes);
+  writeFileSync(imagePath, bytes);
+
+  let called = false;
+  const client = subject.createApiClient({
+    apiKey: "sk-test",
+    fetchImpl: async () => {
+      called = true;
+      return jsonResponse({});
+    },
+  });
+
+  await assert.rejects(() => client.uploadImage(imagePath), /4 MiB/i);
+  assert.equal(called, false);
+});
+
 test("compile sends uploadKey with a caller-owned stable Idempotency-Key", async () => {
   let request;
   const client = subject.createApiClient({
