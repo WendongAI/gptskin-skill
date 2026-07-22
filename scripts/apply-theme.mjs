@@ -89,8 +89,8 @@ async function cdpConnect() {
 }
 
 // Generate CSS from colors array (accent, secondary, background)
-function generateCSS(colors) {
-  const [accent, secondary, bg] = colors;
+function generateCSS(colors, panelAlpha = 0.72) {
+  const [accentRaw, secondary, bg] = colors;
   const hexToRgb = (hex) => {
     const h = hex.replace("#", "");
     return `${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)}`;
@@ -108,6 +108,14 @@ function generateCSS(colors) {
   };
   const rgba = (hex, a) => `rgba(${hexToRgb(hex)},${a})`;
 
+  // WCAG contrast helpers — readability is derived and verified, never lucky.
+  const parseC = (c) => c.startsWith("rgb") ? c.match(/\d+/g).slice(0,3).map(Number) : hexToRgb(c).split(",").map(Number);
+  const relLum = (c) => {
+    const [r, g, b] = parseC(c).map((v) => { const x = v / 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const contrast = (a, b) => { const la = relLum(a), lb = relLum(b); return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05); };
+
   // Derived palette — direction depends on whether the theme bg is light.
   const light = isLight(bg);
   const shift = (pct) => lighten(bg, light ? -pct : pct);
@@ -118,6 +126,25 @@ function generateCSS(colors) {
   const text = shift(0.86);
   const textMuted = shift(0.55);
   const textFaint = shift(0.42);
+
+  // R1: accent links/buttons must stand out from the surface (target 3:1).
+  const ensureAccent = (hex) => {
+    let [r, g, b] = parseC(hex);
+    let best = hex, bestRatio = contrast(hex, surface);
+    const step = light ? -24 : 24;
+    for (let i = 0; i < 8 && bestRatio < 3; i++) {
+      r = Math.max(0, Math.min(255, r + step));
+      g = Math.max(0, Math.min(255, g + step));
+      b = Math.max(0, Math.min(255, b + step));
+      const cand = `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+      const ratio = contrast(cand, surface);
+      if (ratio <= bestRatio) break;
+      best = cand; bestRatio = ratio;
+    }
+    return best;
+  };
+  const accent = ensureAccent(accentRaw);
+  const onAccent = contrast("#ffffff", accent) >= contrast("#1a1a1a", accent) ? "#ffffff" : "#1a1a1a";
 
   // The Codex workspace is styled almost entirely through --color-token-*
   // CSS variables. Overriding those tokens re-themes the whole UI natively;
@@ -133,6 +160,8 @@ function generateCSS(colors) {
   --gptskin-border: ${border};
   --gptskin-text: ${text};
   --gptskin-text-muted: ${textMuted};
+  --gptskin-panel-alpha: ${panelAlpha};
+  --gptskin-on-accent: ${onAccent};
 
   /* Codex token overrides */
   --color-token-main-surface-primary: ${surface} !important;
@@ -221,13 +250,14 @@ async function injectTheme(cdp, css, bgBase64, bgMime = "image/webp", bgFilter =
     // 2. Codex's surfaces are opaque; make them translucent (~28% show-through).
     // brightness() lifts dark source images (e.g. space scenes) into visibility.
     js += `document.body.style.setProperty('background-color','transparent','important');
+      const pa=(getComputedStyle(document.documentElement).getPropertyValue('--gptskin-panel-alpha')||'').trim()||'0.72';
       const b=document.createElement('style');b.id='gptskin-bg';
       b.textContent=\`body::before{content:'';position:fixed;inset:0;z-index:-1;
       background-image:url('data:${bgMime};base64,${bgBase64}');
       background-size:cover;background-position:center;pointer-events:none;
       filter:${bgFilter}}
       main.main-surface,aside.app-shell-left-panel,div[class*="composer-surface-"]{
-      background-color:rgba(var(--gptskin-background-rgb),.72)!important}\`;
+      background-color:rgba(var(--gptskin-background-rgb),\${pa})!important}\`;
       document.head.appendChild(b);`;
   }
   // Watermark badge: every user screenshot carries the theme name + domain.
@@ -302,7 +332,7 @@ else if (args[0] === "--preset" && args[1]) {
     console.log(`Available: ${presets.map(p => p.id).join(", ")}`);
     process.exit(1);
   }
-  const css = generateCSS(preset.colors);
+  const css = generateCSS(preset.colors, preset.panelAlpha);
   // Optional bundled background image (preset.background = "bg/xxx.webp")
   let bgBase64 = null, bgMime = "image/webp";
   if (preset.background) {
@@ -331,7 +361,9 @@ else if (args[0] === "--preset" && args[1]) {
 // === LOCAL PREVIEW (no API key needed) ===
 
 else if (args[0] === "--try" && args[1]) {
-  // --try "#accent,#secondary,#bg" [bg-image.(webp|png|jpg)]
+  // --try "#accent,#secondary,#bg" [bg-image.(webp|png|jpg)] [bg-filter]
+  const bgFilterArg = args[3];
+  const panelAlphaArg = args[4] ? Number(args[4]) : undefined;
   const colors = args[1].split(",").map(s => s.trim());
   if (colors.length !== 3 || colors.some(c => !/^#[0-9a-fA-F]{6}$/.test(c))) {
     console.log(`❌ Usage: --try "#accent,#secondary,#bg" [image.(webp|png|jpg)]`);
@@ -345,10 +377,10 @@ else if (args[0] === "--try" && args[1]) {
     else if (/\.jpe?g$/i.test(p)) bgMime = "image/jpeg";
     bgBase64 = readFileSync(p).toString("base64");
   }
-  const css = generateCSS(colors);
+  const css = generateCSS(colors, panelAlphaArg);
   if (!(await ensureCdp())) process.exit(1);
   const cdp = await cdpConnect();
-  await injectTheme(cdp, css, bgBase64, bgMime, undefined, null, lightFixFor(colors));
+  await injectTheme(cdp, css, bgBase64, bgMime, bgFilterArg || undefined, null, lightFixFor(colors));
   cdp.close();
   console.log(`✅ Applied local preview | Colors: ${colors.join(", ")}${bgBase64 ? " + background image" : ""}`);
 }
