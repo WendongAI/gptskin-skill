@@ -127,19 +127,22 @@ function generateCSS(colors, panelAlpha = 0.72) {
   const textMuted = shift(0.55);
   const textFaint = shift(0.42);
 
-  // R1: accent links/buttons must stand out from the surface (target 3:1).
+  // R1: accent links/buttons must stand out from the surface (target WCAG AA
+  // 4.5:1). Contrast vs a fixed surface is U-shaped in accent luminance — an
+  // accent darker than the surface first LOSES contrast as it lightens toward
+  // it — so never stop at a local dip; walk the full range, keep the best.
   const ensureAccent = (hex) => {
     let [r, g, b] = parseC(hex);
     let best = hex, bestRatio = contrast(hex, surface);
     const step = light ? -24 : 24;
-    for (let i = 0; i < 8 && bestRatio < 3; i++) {
+    for (let i = 0; i < 12 && bestRatio < 4.5; i++) {
       r = Math.max(0, Math.min(255, r + step));
       g = Math.max(0, Math.min(255, g + step));
       b = Math.max(0, Math.min(255, b + step));
       const cand = `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
       const ratio = contrast(cand, surface);
-      if (ratio <= bestRatio) break;
-      best = cand; bestRatio = ratio;
+      if (ratio > bestRatio) { best = cand; bestRatio = ratio; }
+      if ((step > 0 && r === 255 && g === 255 && b === 255) || (step < 0 && r === 0 && g === 0 && b === 0)) break;
     }
     return best;
   };
