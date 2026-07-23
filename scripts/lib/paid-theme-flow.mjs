@@ -58,7 +58,9 @@ export async function createPaidTheme({ client, store, imagePath, themeName = ""
       throw new Error(`You need ${CUSTOM_THEME_CREDITS} Credits; current balance is ${creditsBefore}`);
     }
 
-    const uploaded = await client.uploadImage(imagePath);
+    const uploaded = await client.uploadImage(imagePath, {
+      idempotencyKey: identity.idempotencyKey,
+    });
     operation = store.saveOperation({
       ...identity,
       uploadKey: uploaded.uploadKey,

@@ -69,7 +69,7 @@ export function createApiClient({
     getCredits: () => request("/api/user/credits"),
     listThemes: () => request("/api/themes"),
     getThemeApplication: (id) => request(`/api/themes/${encodeURIComponent(id)}/css`),
-    async uploadImage(imagePath) {
+    async uploadImage(imagePath, { idempotencyKey } = {}) {
       const bytes = readFileSync(imagePath);
       const imageType = detectImageType(bytes);
       if (!imageType) throw new Error("Only PNG, JPEG, or WebP images are supported");
@@ -81,7 +81,10 @@ export function createApiClient({
       const fileName = `${basename(imagePath, originalExtension)}${imageType.extension}`;
       const form = new FormData();
       form.append("files", new Blob([bytes], { type: imageType.mime }), fileName);
-      const data = await request("/api/storage/upload-image", { method: "POST", body: form });
+      // The upload endpoint reserves the paid job under this key; compile
+      // reuses the same key so one reservation covers the whole flow.
+      const headers = idempotencyKey ? { "Idempotency-Key": idempotencyKey } : undefined;
+      const data = await request("/api/storage/upload-image", { method: "POST", body: form, headers });
       const uploadKey = data.data?.uploadKey;
       if (!uploadKey) throw new Error(data.error || data.message || "Image upload returned no uploadKey");
       return {
