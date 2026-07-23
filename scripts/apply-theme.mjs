@@ -240,7 +240,7 @@ function lightFixFor(colors) {
   return { text: shift(-0.86), muted: shift(-0.55) };
 }
 
-async function injectTheme(cdp, css, bgBase64, bgMime = "image/webp", bgFilter = "brightness(1.25) saturate(1.1)", themeName = null, lightFix = null) {
+async function injectTheme(cdp, css, bgBase64, bgMime = "image/webp", bgFilter = "none", themeName = null, lightFix = null) {
   const esc = css.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$/g, "\\$");
   // Wrap in an IIFE: top-level `const` in Runtime.evaluate leaks into the
   // page's global scope, so a second injection in the same session would
@@ -258,7 +258,9 @@ async function injectTheme(cdp, css, bgBase64, bgMime = "image/webp", bgFilter =
     //    (CSS painting order), so body bg must be cleared inline or the image
     //    is fully hidden. Inline !important beats the theme's body rule.
     // 2. Codex's surfaces are opaque; make them translucent (~28% show-through).
-    // brightness() lifts dark source images (e.g. space scenes) into visibility.
+    // Default filter is "none": keep the source image pixel-faithful (users
+    // notice a gray haze from brightness lifts). Presets may opt into a mild
+    // filter via their JSON bgFilter.
     js += `document.body.style.setProperty('background-color','transparent','important');
       const pa=(getComputedStyle(document.documentElement).getPropertyValue('--gptskin-panel-alpha')||'').trim()||'0.72';
       const b=document.createElement('style');b.id='gptskin-bg';
