@@ -269,7 +269,9 @@ async function injectTheme(cdp, css, bgBase64, bgMime = "image/webp", bgFilter =
       background-size:cover;background-position:center;pointer-events:none;
       filter:${bgFilter}}
       main.main-surface,aside.app-shell-left-panel,div[class*="composer-surface-"]{
-      background-color:rgba(var(--gptskin-background-rgb),\${pa})!important}\`;
+      background-color:rgba(var(--gptskin-background-rgb),\${pa})!important;
+      backdrop-filter:blur(24px) saturate(1.15)!important;
+      -webkit-backdrop-filter:blur(24px) saturate(1.15)!important}\`;
       document.head.appendChild(b);`;
   }
   // Watermark badge: every user screenshot carries the theme name + domain.
