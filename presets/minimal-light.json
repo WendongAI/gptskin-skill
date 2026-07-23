@@ -8,8 +8,7 @@
     "#f8fafc"
   ],
   "background": "bg/minimal-light.webp",
-  "bgFilter": "brightness(1.02) saturate(0.95)",
-  "credit": "Jose Gill / Pexels",
+  "credit": "Pexels",
   "free": true,
-  "panelAlpha": 0.66
+  "panelAlpha": 0.55
 }
