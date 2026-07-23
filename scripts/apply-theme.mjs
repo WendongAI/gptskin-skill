@@ -179,6 +179,13 @@ function generateCSS(colors, panelAlpha = 0.72) {
   --color-token-text-tertiary: ${textFaint} !important;
   --color-token-foreground: ${text} !important;
   --color-token-description-foreground: ${textMuted} !important;
+  /* Codex remaps token-foreground to --vscode-foreground inside
+     .sidebar-foreground-muted; keep the vscode bases in sync so sidebar
+     nav text cannot fall back to Codex's built-in dark defaults. */
+  --vscode-foreground: ${text} !important;
+  --vscode-descriptionForeground: ${textMuted} !important;
+  --vscode-disabledForeground: ${textFaint} !important;
+  --vscode-icon-foreground: ${text} !important;
   --color-token-border: ${border} !important;
   --color-token-border-default: ${border} !important;
   --color-token-border-light: ${border} !important;
